@@ -7,7 +7,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Supernal UTM Mockup</title>
+        <title>FlightSync GOAT</title>
 
         <!--Custom CSS-->
         <link rel="stylesheet" type="text/css" href="css/style.css" />
@@ -30,7 +30,7 @@
         <calcite-shell>
             <div id="header-title" slot="header">
                 <img src="media/flightsync.png" alt="Flight Sync" id="logo">
-                <h2>Notional Route Development</h2>
+                <h2>Global Open Airspace Tool</h2>
                 <div style="position: absolute; right: 10px; top: 0px;">
                     <div id="search-div"></div>
                     <calcite-dropdown id="menu">
@@ -42,52 +42,65 @@
                 </div>
             </div>
 
-            <calcite-shell-panel slot="panel-start" width-scale="m">
+            <calcite-shell-panel slot="panel-start" id="panel-start" width-scale="m">
                 <calcite-panel>
                     <calcite-block collapsible heading="Map Contents" id="map-contents">
                         <calcite-icon slot="icon" scale="s" icon="map-contents"></calcite-icon>
                         <div id="layer-list"></div>
                     </calcite-block>
-                    <calcite-block collapsible heading="Tools" id="map-tools">
-                        <calcite-icon slot="icon" scale="s" icon="wrench"></calcite-icon>
+                    <calcite-block collapsible heading="Routes" id="routes-container">
+                        <calcite-icon slot="icon" scale="s" icon="conditional-rules-path"></calcite-icon>
                         <calcite-action text="Create Route" icon="line" text-enabled alignment="center" appearance="transparent" scale="m" id="create-route"></calcite-action>
-                        <calcite-action text="Edit Route" icon="pencil" text-enabled alignment="center" appearance="transparent" scale="m" id="edit-route"></calcite-action>
-                        <div id="editor-widget"></div>
                         <div id="waypoint-list">
-                            <calcite-list id="waypoints">
+                            <table id="waypoint-table" style="width: 100%;">
+                                <colgroup>
+                                    <col span="1" style="width: 15%;">
+                                    <col span="1" style="width: 30%;">
+                                    <col span="1" style="width: 27.5%;">
+                                    <col span="1" style="width: 27.5%;">
+                                </colgroup>
+                                <thead>
+                                    <tr>
+                                        <th>Vertice</th>
+                                        <th>X</th>
+                                        <th>Y</th>
+                                        <th>Z</th>
+                                    </tr>
+                                </thead>
+                                
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <calcite-button id="save-vertices">Save Vertices</calcite-button>
+                        <div id="existing-routes-list">
+                            <calcite-list id="existing-routes" filter-enabled loading selection-mode="single" selection-appearance="border">
                                 <!--Auto Genereated in main.js-->                                
                             </calcite-list>
                         </div>
-                    </calcite-block>
-                    <calcite-block collapsible heading="Routes" id="routes-container">
-                        <calcite-icon slot="icon" scale="s" icon="conditional-rules-path"></calcite-icon>
                     </calcite-block>
                 </calcite-panel>
             </calcite-shell-panel>
 
             <calcite-panel id="map-area">
                 <div id="view-div"></div>
+                <calcite-color-picker id="color-picker"></calcite-color-picker>
                 <calcite-action-pad expand-disabled layout="horizontal" id="route-toolbar">
                     <calcite-action text="Add" icon="plus" id="add-route-vertices"></calcite-action>
                     <calcite-action text="Cancel" icon="circle-disallowed" id="cancel-vertices" disabled></calcite-action>
                     <calcite-action text="Edit" icon="vertex-edit" id="edit-vertices" disabled></calcite-action>
                     <calcite-action text="Complete" icon="line-check" id="complete-route" disabled></calcite-action>
-                    <calcite-action text="Save" icon="save" id="save-route" disabled></calcite-action>
-                </calcite-action-pad> 
+                    <calcite-action text="Save" icon="save" id="save" disabled></calcite-action>
+                </calcite-action-pad>
+                <div id="infoDiv">
+                    <input
+                        class="esri-component esri-widget--button esri-widget esri-interactive"
+                        type="button"
+                        id="switch-btn"
+                        value="3D"
+                    />
+                </div>
                 
                 <div id="inset-div"></div>
-
-                <calcite-modal aria-labelledby="modal-title" id="altitude-modal" outside-close-disabled close-button-disabled escape-disabled scale="s" width="s">
-                    <div slot="header" id="modal-title">
-                        Enter Altitude
-                    </div>
-                    <div slot="content">
-                      <calcite-input placeholder="Altitude (ft)" id="altitude-value" type="number"></calcite-input>
-                    </div>
-                    <calcite-button slot="primary" width="full" id="altitude-save">
-                        Submit Value
-                    </calcite-button>
-                </calcite-modal>
 
                 <calcite-modal aria-labelledby="modal-title" id="route-save-modal" outside-close-disabled close-button-disabled escape-disabled scale="s" width="s">
                     <div slot="header" id="modal-title">
@@ -96,15 +109,15 @@
                     <div slot="content">
                         <calcite-label>
                             Route Name
-                            <calcite-input placeholder="Example: 'Raytheon to Hawthorne" id="route-name"></calcite-input>
+                            <calcite-input placeholder="Example: 'Raytheon to Hawthorne'" id="route-name"></calcite-input>
                         </calcite-label>
                         <calcite-label>
                             Departing Facility
-                            <calcite-input placeholder="Example: 'Raytheon" id="route-arr"></calcite-input>
+                            <calcite-input placeholder="Example: 'Raytheon'" id="route-dep"></calcite-input>
                         </calcite-label>
                         <calcite-label>
                             Arriving Facility
-                            <calcite-input placeholder="Example: 'Hawthorne" id="route-dep"></calcite-input>
+                            <calcite-input placeholder="Example: 'Hawthorne'" id="route-arr"></calcite-input>
                         </calcite-label>
                     </div>
                     <calcite-button slot="primary" width="full" id="route-save">
@@ -120,13 +133,9 @@
                         <calcite-label>
                             Choose a field
                             <calcite-combobox placeholder="Select a field" id="airport-field-select" selection-mode="single">
-                                <calcite-combobox-item value="ICAO_ID" text-label="ICAO_ID"></calcite-combobox-item>
-                                <calcite-combobox-item value="IDENT" text-label="IDENT"></calcite-combobox-item>
-                                <calcite-combobox-item value="MIL_CODE" text-label="MIL_CODE"></calcite-combobox-item>
-                                <calcite-combobox-item value="NAME" text-label="NAME"></calcite-combobox-item>
-                                <calcite-combobox-item value="SERVCITY" text-label="SERVCITY"></calcite-combobox-item>
-                                <calcite-combobox-item value="STATE" text-label="STATE"></calcite-combobox-item>
-                                <calcite-combobox-item value="TYPE_CODE" text-label="TYPE_CODE"></calcite-combobox-item>
+                                <calcite-combobox-item value="TYPE_CODE" text-label="Type"></calcite-combobox-item>
+                                <calcite-combobox-item value="STATE" text-label="State"></calcite-combobox-item>
+                                <calcite-combobox-item value="MIL_CODE" text-label="Military Use"></calcite-combobox-item>
                             </calcite-select>
                         </calcite-label>
                         <calcite-combobox placeholder="Filter Value" id="airport-filter-value" max-items="5">
@@ -142,12 +151,7 @@
                         <calcite-label>
                             Choose a field
                             <calcite-combobox placeholder="Select a field" id="airspace-field-select" selection-mode="single">
-                                <calcite-combobox-item value="CLASS" text-label="CLASS"></calcite-combobox-item>
-                                <calcite-combobox-item value="ICAO_ID" text-label="ICAO_ID"></calcite-combobox-item>
-                                <calcite-combobox-item value="IDENT" text-label="IDENT"></calcite-combobox-item>
-                                <calcite-combobox-item value="LOCAL_TYPE" text-label="LOCAL_TYPE"></calcite-combobox-item>
-                                <calcite-combobox-item value="NAME" text-label="NAME"></calcite-combobox-item>
-                                <calcite-combobox-item value="TYPE_CODE" text-label="TYPE_CODE"></calcite-combobox-item>
+                                <calcite-combobox-item value="CLASS" text-label="Class"></calcite-combobox-item>
                             </calcite-select>
                         </calcite-label>
                         <calcite-combobox placeholder="Filter Value" id="airspace-filter-value" max-items="5">
@@ -179,11 +183,7 @@
                         <calcite-label>
                             Choose a field
                             <calcite-combobox placeholder="Select a field" id="navaids-field-select" selection-mode="single">
-                                <calcite-combobox-item value="CLASS_TXT" text-label="CLASS_TXT"></calcite-combobox-item>
-                                <calcite-combobox-item value="NAS_USE" text-label="NAS_USE"></calcite-combobox-item>
-                                <calcite-combobox-item value="IDENT" text-label="IDENT"></calcite-combobox-item>
-                                <calcite-combobox-item value="NAME_TXT" text-label="NAME_TXT"></calcite-combobox-item>
-                                <calcite-combobox-item value="TYPE_CODE" text-label="TYPE_CODE"></calcite-combobox-item>
+                                <calcite-combobox-item value="CLASS_TXT" text-label="Class"></calcite-combobox-item>
                             </calcite-select>
                         </calcite-label>
                         <calcite-combobox placeholder="Filter Value" id="navaids-filter-value" max-items="5">
@@ -199,9 +199,8 @@
                         <calcite-label>
                             Choose a field
                             <calcite-combobox placeholder="Select a field" id="obstacles-field-select" selection-mode="single">
-                                <calcite-combobox-item value="OAS_Number" text-label="OAS_Number"></calcite-combobox-item>
+                                <calcite-combobox-item value="Type_Code" text-label="Type"></calcite-combobox-item>
                                 <calcite-combobox-item value="State" text-label="State"></calcite-combobox-item>
-                                <calcite-combobox-item value="Type_Code" text-label="Type_Code"></calcite-combobox-item>
                             </calcite-select>
                         </calcite-label>
                         <calcite-combobox placeholder="Filter Value" id="obstacles-filter-value" max-items="5">
@@ -213,15 +212,22 @@
                     </calcite-block>
                 </div>
 
-            <div id="elevation-profile" slot="footer"></div>
+                <div id="elevation-profile" slot="footer"></div>
+            </calcite-panel>
 
+            <!--
+            <calcite-shell-panel slot="panel-end" id="panel-end" width-scale="m">
+                <calcite-panel>
+                    <div id="popup-container"></div>
+                </calcite-panel>
+            </calcite-shell-panel>
+            -->
         </calcite-shell>
 
         <script src="lib/jquery-3.6.4.js"></script>
         <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
         <script src="https://js.arcgis.com/4.26/"></script>
         <script type="module" src="js/main.js"></script>
-        <script type="module" src="js/elevationProfile.js"></script>
     </body>
 
 </html>
